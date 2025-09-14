@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Senhas Seguras</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 500px;
+        }
+        #password-output {
+            user-select: all;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 flex items-center justify-center min-h-screen">
+    <div class="container mx-auto p-6 bg-white rounded-xl shadow-lg">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Gerador de Senhas Seguras</h1>
+        
+        <!-- Password Display Area -->
+        <div class="mb-6">
+            <div id="password-output" class="bg-gray-200 text-gray-800 text-lg p-4 rounded-lg text-center font-mono break-all transition-all duration-300">
+                Sua senha será exibida aqui
+            </div>
+            <div id="strength-indicator" class="mt-2 h-2 rounded-full transition-all duration-500"></div>
+        </div>
+        
+        <!-- Options Form -->
+        <div class="space-y-4 mb-6">
+            <!-- Password Length Slider -->
+            <div>
+                <label for="length" class="block text-sm font-medium text-gray-700">Comprimento da Senha: <span id="length-value">12</span></label>
+                <input type="range" id="length" min="6" max="30" value="12" class="w-full h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <!-- Character Checkboxes -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex items-center">
+                    <input type="checkbox" id="uppercase" checked class="h-4 w-4 text-blue-600 rounded">
+                    <label for="uppercase" class="ml-2 text-sm font-medium text-gray-700">Letras Maiúsculas (A-Z)</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="lowercase" checked class="h-4 w-4 text-blue-600 rounded">
+                    <label for="lowercase" class="ml-2 text-sm font-medium text-gray-700">Letras Minúsculas (a-z)</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="numbers" checked class="h-4 w-4 text-blue-600 rounded">
+                    <label for="numbers" class="ml-2 text-sm font-medium text-gray-700">Números (0-9)</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="symbols" class="h-4 w-4 text-blue-600 rounded">
+                    <label for="symbols" class="ml-2 text-sm font-medium text-gray-700">Símbolos (!@#$)</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex space-x-4">
+            <button id="generate-button" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
+                Gerar Senha
+            </button>
+            <button id="copy-button" class="w-full bg-gray-500 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-gray-600 transition-colors duration-200">
+                Copiar
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const lengthSlider = document.getElementById('length');
+            const lengthValueSpan = document.getElementById('length-value');
+            const generateButton = document.getElementById('generate-button');
+            const copyButton = document.getElementById('copy-button');
+            const passwordOutput = document.getElementById('password-output');
+            const strengthIndicator = document.getElementById('strength-indicator');
+            const checkboxes = {
+                uppercase: document.getElementById('uppercase'),
+                lowercase: document.getElementById('lowercase'),
+                numbers: document.getElementById('numbers'),
+                symbols: document.getElementById('symbols')
+            };
+
+            const charSets = {
+                uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                lowercase: 'abcdefghijklmnopqrstuvwxyz',
+                numbers: '0123456789',
+                symbols: '!@#$%^&*()_+-=[]{}|;:,.<>?'
+            };
+
+            // Update length value display
+            lengthSlider.addEventListener('input', () => {
+                lengthValueSpan.textContent = lengthSlider.value;
+            });
+
+            // Password generation logic
+            const generatePassword = () => {
+                let allChars = '';
+                if (checkboxes.uppercase.checked) allChars += charSets.uppercase;
+                if (checkboxes.lowercase.checked) allChars += charSets.lowercase;
+                if (checkboxes.numbers.checked) allChars += charSets.numbers;
+                if (checkboxes.symbols.checked) allChars += charSets.symbols;
+
+                // Handle case where no options are selected
+                if (allChars.length === 0) {
+                    passwordOutput.textContent = "Selecione pelo menos uma opção.";
+                    updateStrength(0);
+                    return;
+                }
+
+                const length = parseInt(lengthSlider.value);
+                let password = '';
+                for (let i = 0; i < length; i++) {
+                    const randomIndex = Math.floor(Math.random() * allChars.length);
+                    password += allChars[randomIndex];
+                }
+                
+                passwordOutput.textContent = password;
+                updateStrength(password);
+            };
+
+            // Password strength validation logic
+            const updateStrength = (password) => {
+                let score = 0;
+                const length = password.length;
+
+                if (length > 0) {
+                    score += Math.min(length, 12); // Length bonus
+                    if (/[A-Z]/.test(password)) score += 5;
+                    if (/[a-z]/.test(password)) score += 5;
+                    if (/[0-9]/.test(password)) score += 5;
+                    if (/[!@#$%^&*()_+\-=[\]{}|;:,.<>?]/.test(password)) score += 10;
+                }
+                
+                // Set color and width of the indicator
+                if (score < 10) {
+                    strengthIndicator.style.backgroundColor = 'red';
+                    strengthIndicator.style.width = '25%';
+                } else if (score < 20) {
+                    strengthIndicator.style.backgroundColor = 'orange';
+                    strengthIndicator.style.width = '50%';
+                } else if (score < 30) {
+                    strengthIndicator.style.backgroundColor = 'yellowgreen';
+                    strengthIndicator.style.width = '75%';
+                } else {
+                    strengthIndicator.style.backgroundColor = 'green';
+                    strengthIndicator.style.width = '100%';
+                }
+            };
+
+            // Copy to clipboard logic
+            const copyPassword = () => {
+                const passwordText = passwordOutput.textContent;
+                if (passwordText && passwordText !== "Sua senha será exibida aqui" && passwordText !== "Selecione pelo menos uma opção.") {
+                    try {
+                        navigator.clipboard.writeText(passwordText);
+                    } catch (err) {
+                        // Fallback for older browsers
+                        const tempInput = document.createElement('textarea');
+                        tempInput.value = passwordText;
+                        document.body.appendChild(tempInput);
+                        tempInput.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(tempInput);
+                    }
+                    passwordOutput.textContent = "Copiado!";
+                    setTimeout(() => {
+                        passwordOutput.textContent = passwordText;
+                    }, 1000);
+                }
+            };
+            
+            // Event listeners
+            generateButton.addEventListener('click', generatePassword);
+            copyButton.addEventListener('click', copyPassword);
+            
+            // Initial generation
+            generatePassword();
+        });
+    </script>
+</body>
+</html>

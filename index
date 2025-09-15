@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Senha</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md">
+        <h1 class="text-3xl font-bold text-center text-white mb-6">Gerador de Senhas</h1>
+        
+        <div class="mb-6">
+            <label for="passwordLength" class="block text-sm font-medium mb-2 text-gray-400">Comprimento da Senha:</label>
+            <input type="number" id="passwordLength" value="12" min="4" max="50" class="w-full p-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="space-y-4 mb-6">
+            <div class="flex items-center">
+                <input type="checkbox" id="includeUppercase" checked class="h-5 w-5 rounded-md text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500">
+                <label for="includeUppercase" class="ml-3 text-white text-sm">Incluir letras maiúsculas (A-Z)</label>
+            </div>
+            <div class="flex items-center">
+                <input type="checkbox" id="includeLowercase" checked class="h-5 w-5 rounded-md text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500">
+                <label for="includeLowercase" class="ml-3 text-white text-sm">Incluir letras minúsculas (a-z)</label>
+            </div>
+            <div class="flex items-center">
+                <input type="checkbox" id="includeNumbers" checked class="h-5 w-5 rounded-md text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500">
+                <label for="includeNumbers" class="ml-3 text-white text-sm">Incluir números (0-9)</label>
+            </div>
+            <div class="flex items-center">
+                <input type="checkbox" id="includeSymbols" class="h-5 w-5 rounded-md text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500">
+                <label for="includeSymbols" class="ml-3 text-white text-sm">Incluir símbolos (!@#$%)</label>
+            </div>
+        </div>
+        
+        <button id="generateButton" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500">Gerar Senha</button>
+        
+        <div id="resultContainer" class="mt-6 p-4 bg-gray-700 rounded-lg flex items-center justify-between">
+            <span id="generatedPassword" class="text-white text-lg font-mono truncate">Sua senha aparecerá aqui</span>
+            <button id="copyButton" class="ml-4 p-2 bg-gray-600 rounded-lg hover:bg-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-200" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                    <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                </svg>
+            </button>
+        </div>
+
+        <div id="messageBox" class="mt-4 hidden p-3 rounded-lg text-center font-semibold text-white"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const lengthInput = document.getElementById('passwordLength');
+            const uppercaseCheckbox = document.getElementById('includeUppercase');
+            const lowercaseCheckbox = document.getElementById('includeLowercase');
+            const numbersCheckbox = document.getElementById('includeNumbers');
+            const symbolsCheckbox = document.getElementById('includeSymbols');
+            const generateButton = document.getElementById('generateButton');
+            const passwordSpan = document.getElementById('generatedPassword');
+            const copyButton = document.getElementById('copyButton');
+            const messageBox = document.getElementById('messageBox');
+
+            const characters = {
+                uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                lowercase: 'abcdefghijklmnopqrstuvwxyz',
+                numbers: '0123456789',
+                symbols: '!@#$%^&*()_+~`|}{[]:;?><,./-='
+            };
+
+            function showMessage(message, type = 'success') {
+                messageBox.textContent = message;
+                messageBox.classList.remove('hidden', 'bg-red-500', 'bg-green-500');
+                if (type === 'success') {
+                    messageBox.classList.add('bg-green-500');
+                } else {
+                    messageBox.classList.add('bg-red-500');
+                }
+                setTimeout(() => {
+                    messageBox.classList.add('hidden');
+                }, 3000);
+            }
+
+            function generatePassword() {
+                const length = parseInt(lengthInput.value);
+                const includeUppercase = uppercaseCheckbox.checked;
+                const includeLowercase = lowercaseCheckbox.checked;
+                const includeNumbers = numbersCheckbox.checked;
+                const includeSymbols = symbolsCheckbox.checked;
+
+                if (length < 4 || length > 50) {
+                    showMessage('O comprimento da senha deve estar entre 4 e 50.', 'error');
+                    return;
+                }
+
+                if (!includeUppercase && !includeLowercase && !includeNumbers && !includeSymbols) {
+                    showMessage('Selecione pelo menos um tipo de caractere.', 'error');
+                    return;
+                }
+
+                let charSet = '';
+                if (includeUppercase) charSet += characters.uppercase;
+                if (includeLowercase) charSet += characters.lowercase;
+                if (includeNumbers) charSet += characters.numbers;
+                if (includeSymbols) charSet += characters.symbols;
+
+                let password = '';
+                for (let i = 0; i < length; i++) {
+                    const randomIndex = Math.floor(Math.random() * charSet.length);
+                    password += charSet[randomIndex];
+                }
+
+                passwordSpan.textContent = password;
+                showMessage('Senha gerada com sucesso!', 'success');
+            }
+
+            function copyToClipboard() {
+                const password = passwordSpan.textContent;
+                if (password === 'Sua senha aparecerá aqui' || password.length === 0) {
+                    showMessage('Nenhuma senha para copiar.', 'error');
+                    return;
+                }
+                
+                // Using a fallback for better compatibility
+                const textArea = document.createElement('textarea');
+                textArea.value = password;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showMessage('Senha copiada para a área de transferência!', 'success');
+                } catch (err) {
+                    showMessage('Erro ao copiar a senha.', 'error');
+                }
+                document.body.removeChild(textArea);
+            }
+
+            generateButton.addEventListener('click', generatePassword);
+            copyButton.addEventListener('click', copyToClipboard);
+
+            // Generate a password on initial load
+            generatePassword();
+        });
+    </script>
+</body>
+</html>
